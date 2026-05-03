@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions;
 
 use App\Contracts\Repositories\NotificationRepositoryInterface;
@@ -7,9 +9,9 @@ use App\DTO\NotificationDTO;
 use App\Enums\NotificationStatus;
 use App\Events\NotificationCreated;
 use App\Models\Notification;
+use Illuminate\Cache\Repository;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\LockProvider;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -22,10 +24,10 @@ class CreateNotificationAction
 
     public function execute(NotificationDTO $dto): Notification
     {
-        /** @var Repository&LockProvider $repository */
-        $repository = $this->cache->store();
+        /** @var Repository&LockProvider $cache */
+        $cache = $this->cache->store();
 
-        $lock = $repository->lock(
+        $lock = $cache->lock(
             'create_notification_'.$dto->idempotencyKey,
             10
         );
@@ -34,7 +36,7 @@ class CreateNotificationAction
             return DB::transaction(function () use ($dto) {
                 $existing = Notification::where('idempotency_key', $dto->idempotencyKey)->first();
 
-                if ($existing) {
+                if ($existing instanceof Notification) {
                     return $existing;
                 }
 

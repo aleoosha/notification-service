@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Actions\CreateNotificationAction;
@@ -7,6 +9,7 @@ use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateNotificationRequest;
 use App\Http\Requests\GetNotificationHistoryRequest;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
@@ -16,9 +19,11 @@ class NotificationController extends Controller
         private readonly NotificationRepositoryInterface $repository
     ) {}
 
+    /**
+     * Создание уведомления.
+     */
     public function store(CreateNotificationRequest $request): JsonResponse
     {
-
         $notification = $this->createAction->execute($request->toDto());
 
         return $this->success(
@@ -28,11 +33,14 @@ class NotificationController extends Controller
         );
     }
 
+    /**
+     * Получение статуса уведомления.
+     */
     public function show(int $id): JsonResponse
     {
         $notification = $this->repository->findById($id);
 
-        if (! $notification) {
+        if (! $notification instanceof Notification) {
             return $this->error('Notification not found', 404);
         }
 
@@ -44,6 +52,9 @@ class NotificationController extends Controller
         ]);
     }
 
+    /**
+     * История уведомлений пользователя.
+     */
     public function index(GetNotificationHistoryRequest $request): JsonResponse
     {
         $history = $this->repository->getHistory($request->toDto());

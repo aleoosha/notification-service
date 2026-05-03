@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Middleware\IdempotencyMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // 1. Ошибки валидации
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -32,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // 2. Ресурс не найден
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -42,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // 3. Конфликты (Идемпотентность/Блокировки)
         $exceptions->render(function (ConflictHttpException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -52,18 +57,9 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // 4. Общий обработчик для всех остальных исключений
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $e->getMessage(),
-                    'data' => null,
-                ], 500);
-            }
-        });
-
-        $exceptions->render(function (Throwable $e, Request $request) {
-            if ($request->is('api/*')) {
                 return response()->json([
                     'status' => 'error',
                     'message' => config('app.debug') ? $e->getMessage() : 'Server Error',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Services\Channels\EmailSender;
 use App\Services\Channels\NotificationManager;
 use App\Services\Channels\TelegramSender;

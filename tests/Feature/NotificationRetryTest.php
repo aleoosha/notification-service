@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\NotificationChannel;
 use App\Enums\NotificationStatus;
 use App\Jobs\SendNotificationJob;

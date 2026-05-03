@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,3 @@ Route::prefix('notifications')->group(function () {
     Route::get('/', [NotificationController::class, 'index']);
 
 });
-
-// Роут для доп. задания (отчеты) — добавим позже
-// Route::prefix('reports')->group(function () { ... });

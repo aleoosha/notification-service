@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Channels;
 
 use App\Contracts\Services\NotificationSenderInterface;
@@ -8,23 +10,35 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramSender implements NotificationSenderInterface
 {
+    /**
+     * Отправка уведомления через Telegram.
+     */
     public function send(Notification $notification): bool
     {
+        // Принудительная ошибка для отладки
         if (str_contains($notification->text, 'force_error')) {
             return false;
         }
 
+        // Принудительный успех для отладки
         if (str_contains($notification->text, 'force_success')) {
             return true;
         }
 
-        if (rand(1, 100) <= 20) {
-            Log::warning("Random failure for Telegram to user: {$notification->user_id}");
+        // Имитация нестабильности (20% вероятность ошибки)
+        if (random_int(1, 100) <= 20) {
+            Log::warning('Random failure for Telegram sending', [
+                'user_id' => $notification->user_id,
+                'notification_id' => $notification->id,
+            ]);
 
             return false;
         }
 
-        Log::info("Telegram message sent to user {$notification->user_id}");
+        Log::info('Telegram message sent successfully', [
+            'user_id' => $notification->user_id,
+            'notification_id' => $notification->id,
+        ]);
 
         return true;
     }

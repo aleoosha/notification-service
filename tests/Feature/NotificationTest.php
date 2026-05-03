@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 it('creates a notification via api', function () {
     $this->withoutExceptionHandling();
 

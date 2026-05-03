@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Enums\NotificationChannel;
@@ -8,6 +10,7 @@ use App\Models\Notification;
 use App\Services\Channels\NotificationManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -27,6 +30,8 @@ class SendNotificationJob implements ShouldQueue
 
     /**
      * Задержка между попытками (в секундах).
+     *
+     * @var array<int, int>
      */
     public array $backoff = [5, 10, 20, 40, 80];
 
@@ -39,7 +44,7 @@ class SendNotificationJob implements ShouldQueue
      */
     public function handle(NotificationManager $manager): void
     {
-        /** @var LockProvider $cache */
+        /** @var Repository&LockProvider $cache */
         $cache = Cache::store();
 
         $lock = $cache->lock('sending_notification_'.$this->notification->id, 30);
@@ -55,6 +60,7 @@ class SendNotificationJob implements ShouldQueue
             }
 
             try {
+                // Оставляем статус PENDING на время выполнения, как ты и хотел
                 $this->notification->update(['status' => NotificationStatus::PENDING]);
 
                 /** @var NotificationChannel $channel */

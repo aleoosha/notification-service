@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Contracts\Repositories;
 
 use App\DTO\NotificationFilterDTO;
@@ -11,6 +13,8 @@ interface NotificationRepositoryInterface
 {
     /**
      * Создание новой записи уведомления.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function create(array $data): Notification;
 
@@ -21,6 +25,8 @@ interface NotificationRepositoryInterface
 
     /**
      * Получение истории уведомлений пользователя с пагинацией и фильтрами.
+     *
+     * @return LengthAwarePaginator<Notification>
      */
     public function getHistory(NotificationFilterDTO $filters): LengthAwarePaginator;
 
