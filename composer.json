@@ -9,13 +9,15 @@
         "laravel/tinker": "^2.9"
     },
     "require-dev": {
-        "laravel/pint": "^1.13",
-        "phpstan/phpstan": "^1.10",
-        "nunomaduro/larastan": "^2.0",
         "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
+        "nunomaduro/larastan": "^2.0",
+        "pestphp/pest": "^2.36",
+        "pestphp/pest-plugin-laravel": "^2.4",
+        "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^10.5"
     },
     "autoload": {
@@ -43,6 +45,7 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
+            "pestphp/pest-plugin": true,
             "php-http/discovery": true
         },
         "platform": {
