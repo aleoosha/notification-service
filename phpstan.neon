@@ -1,0 +1,16 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - config/
+        - database/
+        - routes/
+
+    level: 5
+
+    ignoreErrors:
+        - '#Access to constant ATTR_SSL_CA on an unknown class Pdo\\Mysql#'
+
+    reportUnmatchedIgnoredErrors: false
