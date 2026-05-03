@@ -5,7 +5,6 @@ namespace App\Services\Channels;
 use App\Contracts\Services\NotificationSenderInterface;
 use App\Enums\NotificationChannel;
 use Illuminate\Support\Manager;
-use InvalidArgumentException;
 
 class NotificationManager extends Manager
 {

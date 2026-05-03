@@ -1,7 +1,7 @@
 <?php
 
 it('creates a notification via api', function () {
-    $this->withoutExceptionHandling(); 
+    $this->withoutExceptionHandling();
 
     $payload = [
         'idempotency_key' => 'unique-123',
@@ -11,7 +11,7 @@ it('creates a notification via api', function () {
     ];
 
     $response = $this->postJson('/api/notifications', $payload, [
-        'X-Idempotency-Key' => 'unique-123'
+        'X-Idempotency-Key' => 'unique-123',
     ]);
 
     $response->assertStatus(201)
@@ -19,7 +19,7 @@ it('creates a notification via api', function () {
 
     $this->assertDatabaseHas('notifications', [
         'idempotency_key' => 'unique-123',
-        'status' => 'pending'
+        'status' => 'pending',
     ]);
 });
 

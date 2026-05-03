@@ -6,8 +6,8 @@ use App\Actions\CreateNotificationAction;
 use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateNotificationRequest;
-use Illuminate\Http\JsonResponse;
 use App\Http\Requests\GetNotificationHistoryRequest;
+use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
@@ -32,7 +32,7 @@ class NotificationController extends Controller
     {
         $notification = $this->repository->findById($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return $this->error('Notification not found', 404);
         }
 

@@ -19,7 +19,7 @@ class GetNotificationHistoryRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer'],
-            'status'  => ['nullable', new Enum(NotificationStatus::class)],
+            'status' => ['nullable', new Enum(NotificationStatus::class)],
             'channel' => ['nullable', new Enum(NotificationChannel::class)],
         ];
     }

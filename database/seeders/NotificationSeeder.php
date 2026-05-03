@@ -12,7 +12,7 @@ class NotificationSeeder extends Seeder
     {
         User::factory(10)->create()->each(function ($user) {
             Notification::factory(50)->create([
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         });
     }

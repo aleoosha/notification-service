@@ -20,10 +20,12 @@ class TelegramSender implements NotificationSenderInterface
 
         if (rand(1, 100) <= 20) {
             Log::warning("Random failure for Telegram to user: {$notification->user_id}");
+
             return false;
         }
 
         Log::info("Telegram message sent to user {$notification->user_id}");
+
         return true;
     }
 }

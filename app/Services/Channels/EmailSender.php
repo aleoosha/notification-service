@@ -20,10 +20,12 @@ class EmailSender implements NotificationSenderInterface
 
         if (rand(1, 100) <= 20) {
             Log::warning("Random failure for Email to user: {$notification->user_id}");
+
             return false;
         }
 
         Log::info("Email sent to user {$notification->user_id}");
+
         return true;
     }
 }

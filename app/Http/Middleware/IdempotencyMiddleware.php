@@ -11,13 +11,13 @@ class IdempotencyMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->isMethod('POST')) {
+        if (! $request->isMethod('POST')) {
             return $next($request);
         }
 
         $key = $request->header('X-Idempotency-Key');
 
-        if (!$key) {
+        if (! $key) {
             return $next($request);
         }
 
