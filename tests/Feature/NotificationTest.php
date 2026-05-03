@@ -1,6 +1,8 @@
 <?php
 
 it('creates a notification via api', function () {
+    $this->withoutExceptionHandling(); 
+
     $payload = [
         'idempotency_key' => 'unique-123',
         'user_id' => 1,
