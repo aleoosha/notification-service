@@ -13,12 +13,7 @@ class NotificationManager extends Manager
     {
         $driver = $driver ?: $this->getDefaultDriver();
 
-        if (is_null($driver)) {
-            throw new InvalidArgumentException(sprintf(
-                'Unable to resolve NULL driver for [%s].', static::class
-            ));
-        }
-
+        /** @var NotificationSenderInterface */
         return parent::driver($driver);
     }
 

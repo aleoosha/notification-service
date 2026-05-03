@@ -9,6 +9,7 @@ use App\Events\NotificationCreated;
 use App\Models\Notification;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -21,12 +22,8 @@ class CreateNotificationAction
 
     public function execute(NotificationDTO $dto): Notification
     {
+        /** @var Repository&LockProvider $repository */
         $repository = $this->cache->store();
-        $store = $repository->getStore();
-
-        if (! $store instanceof LockProvider) {
-            throw new \RuntimeException('Current cache store does not support atomic locks. Driver: '.config('cache.default'));
-        }
 
         $lock = $repository->lock(
             'create_notification_'.$dto->idempotencyKey,
@@ -56,6 +53,7 @@ class CreateNotificationAction
             throw new ConflictHttpException('Request is already being processed.');
         }
 
+        /** @var Notification $result */
         return $result;
     }
 }

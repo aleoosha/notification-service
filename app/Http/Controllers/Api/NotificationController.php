@@ -7,7 +7,7 @@ use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateNotificationRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Http\Requests\GetNotificationHistoryRequest;
 
 class NotificationController extends Controller
 {
@@ -44,19 +44,9 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(GetNotificationHistoryRequest $request): JsonResponse
     {
-        $request->validate([
-            'user_id' => ['required', 'integer'],
-            'status'  => ['nullable', 'string'],
-            'channel' => ['nullable', 'string'],
-        ]);
-
-        $history = $this->repository->getHistory(
-            userId: (int) $request->query('user_id'),
-            status: $request->query('status'),
-            channel: $request->query('channel')
-        );
+        $history = $this->repository->getHistory($request->toDto());
 
         return $this->success($history);
     }

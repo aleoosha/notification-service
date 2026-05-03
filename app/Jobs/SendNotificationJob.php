@@ -2,10 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Enums\NotificationChannel;
 use App\Enums\NotificationStatus;
 use App\Models\Notification;
 use App\Services\Channels\NotificationManager;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -25,7 +27,6 @@ class SendNotificationJob implements ShouldQueue
 
     /**
      * Задержка между попытками (в секундах).
-     * Каждая следующая попытка будет через 5, 10, 20... секунд.
      */
     public array $backoff = [5, 10, 20, 40, 80];
 
@@ -38,30 +39,38 @@ class SendNotificationJob implements ShouldQueue
      */
     public function handle(NotificationManager $manager): void
     {
-        $lock = Cache::lock('sending_notification_' . $this->notification->id, 30);
+        /** @var LockProvider $cache */
+        $cache = Cache::store();
+
+        $lock = $cache->lock('sending_notification_'.$this->notification->id, 30);
 
         $lock->get(function () use ($manager) {
             $this->notification->refresh();
 
-            if ($this->notification->status === NotificationStatus::SENT) {
+            /** @var NotificationStatus $status */
+            $status = $this->notification->status;
+
+            if ($status === NotificationStatus::SENT) {
                 return;
             }
 
             try {
                 $this->notification->update(['status' => NotificationStatus::PENDING]);
 
-                $sender = $manager->driver($this->notification->channel->value);
+                /** @var NotificationChannel $channel */
+                $channel = $this->notification->channel;
+
+                $sender = $manager->driver($channel->value);
 
                 if ($sender->send($this->notification)) {
                     $this->notification->update(['status' => NotificationStatus::SENT]);
                 } else {
-                    throw new \Exception("The driver failed to send the message.");
+                    throw new \Exception('The driver failed to send the message.');
                 }
-
             } catch (Throwable $e) {
-                Log::error("Notification Job Failed: " . $e->getMessage(), [
+                Log::error('Notification Job Failed: '.$e->getMessage(), [
                     'id' => $this->notification->id,
-                    'attempt' => $this->attempts()
+                    'attempt' => $this->attempts(),
                 ]);
 
                 if ($this->attempts() >= $this->tries) {
