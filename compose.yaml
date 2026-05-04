@@ -79,6 +79,7 @@ services:
             DB_CONNECTION: pgsql
             DB_HOST: pgsql
             REDIS_HOST: redis
+            QUEUE_CONNECTION: redis 
         command: php artisan queue:work
         volumes:
             - '.:/var/www/html'

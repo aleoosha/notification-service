@@ -2,30 +2,59 @@
 
 REST API сервис для гарантированной доставки уведомлений (Email/Telegram) с поддержкой асинхронной генерации отчетов.
 
+## Требования к окружению
+
+Для стабильной работы проекта необходимы следующие версии ПО:
+
+- **PHP**: 8.3.x (строго не ниже 8.3, проект не поддерживает 8.4 из-за ограничений текущих зависимостей)
+- **Database**: PostgreSQL 15+
+- **Cache/Queue**: Redis 7.x
+- **Docker**: Engine 24.0+ и Docker Compose v2.20+ (если запуск через Sail)
+
 ## Как запустить проект локально
 
 1. Клонировать репозиторий:
    ```bash
    git clone <url_репозитория>
+   ```
+   ```bash
    cd notification-service
    ```
 
-2. Установить зависимости и запустить инфраструктуру:
+2. **Копирование переменных окружения**:
+   При первом запуске обязательно создайте файл `.env`:
    ```bash
-   # Установка vendor через временный контейнер (если composer не установлен локально)
-   docker run --rm -u "\$(id -u):\((id -g)" -v "\)(pwd):/var/www/html" -w /var/www/html laravelsail/php83-composer:latest composer install --ignore-platform-reqs
+   cp .env.example .env
+   ```
 
+3. **Важные параметры в .env**:
+   - `APP_PORT`: Порт, на котором будет доступно API (по умолчанию 8080).
+   - `DB_CONNECTION`: Установлено в `pgsql`.
+   - `QUEUE_CONNECTION`: Установлено в `redis` (обязательно для работы асинхронных отчетов и уведомлений).
+
+4. Установить зависимости и запустить инфраструктуру:
+   ```bash
+   docker run --rm \
+      --network=host \
+      -u "$(id -u):$(id -g)" \
+      -v "$(pwd):/var/www/html" \
+      -w /var/www/html \
+      laravelsail/php83-composer:latest \
+      sh -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --ignore-platform-reqs --no-interaction --prefer-dist"
+   ```
+   ```bash
    ./vendor/bin/sail up -d
    ```
 
-3. Подготовить базу данных:
+5. **Генерация ключа приложения**:
+   ```bash
+   ./vendor/bin/sail artisan key:generate
+   ```
+
+6. Подготовить базу данных:
    ```bash
    ./vendor/bin/sail artisan migrate --seed
    ```
-
-4. Проверка работы фоновых процессов:
-   - Outbox Relay (мониторинг таблиц): `./vendor/bin/sail logs -f outbox-relay`
-   - Queue Worker (выполнение задач): `./vendor/bin/sail logs -f worker`
 
 ### Мониторинг фоновых процессов
 
