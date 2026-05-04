@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\Repositories\NotificationRepositoryInterface;
+use App\Contracts\Repositories\ReportRepositoryInterface;
 use App\Events\NotificationCreated;
 use App\Listeners\ProcessNotificationOutbox;
+use App\Models\User;
+use App\Observers\UserObserver;
 use App\Repositories\EloquentNotificationRepository;
+use App\Repositories\EloquentReportRepository;
 use App\Services\Channels\NotificationManager;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,5 +48,14 @@ class AppServiceProvider extends ServiceProvider
             NotificationCreated::class,
             ProcessNotificationOutbox::class
         );
+
+        User::observe(UserObserver::class);
+
+        $this->app->bind(NotificationRepositoryInterface::class, EloquentNotificationRepository::class);
+        $this->app->bind(ReportRepositoryInterface::class, EloquentReportRepository::class);
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

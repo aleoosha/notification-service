@@ -1,5 +1,5 @@
 includes:
-    - ./vendor/nunomaduro/larastan/extension.neon
+    - vendor/larastan/larastan/extension.neon
 
 parameters:
     paths:
@@ -11,13 +11,17 @@ parameters:
     level: 5
 
     ignoreErrors:
+        -
+            message: '#Undefined variable: \$this#'
+            path: routes/console.php
+
         # Исключаем ошибку PDO
         - '#Access to constant ATTR_SSL_CA on an unknown class Pdo\\Mysql#'
 
         # Исключаем бесконечный цикл в команде-демоне (архитектурная особенность)
         -
             message: '#While loop condition is always true#'
-            path: app/Console/Commands/ProcessNotificationOutboxCommand.php
+            path: app/Console/Commands/ProcessOutboxRelayCommand.php        
 
         # Исключаем skipLocked(), так как метод существует в БД, но не описан в контрактах Eloquent
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder.*::skipLocked\(\)#'
