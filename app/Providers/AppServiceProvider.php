@@ -9,6 +9,7 @@ use App\Events\NotificationCreated;
 use App\Listeners\ProcessNotificationOutbox;
 use App\Repositories\EloquentNotificationRepository;
 use App\Services\Channels\NotificationManager;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 

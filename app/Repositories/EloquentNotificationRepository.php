@@ -10,6 +10,7 @@ use App\Enums\NotificationStatus;
 use App\Models\Notification;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EloquentNotificationRepository implements NotificationRepositoryInterface
 {
@@ -49,14 +50,15 @@ class EloquentNotificationRepository implements NotificationRepositoryInterface
      */
     public function getPending(int $limit = 50): Collection
     {
-        /** @var Collection<int, Notification> $result */
-        $result = Notification::query()
-            ->where('status', NotificationStatus::PENDING)
-            ->where('attempts', '<', 5)
-            ->orderBy('created_at', 'asc')
-            ->limit($limit)
-            ->get();
-
-        return $result;
+        return DB::transaction(function () use ($limit) {
+            /** @var Collection<int, Notification> */
+            return Notification::query()
+                ->where('status', NotificationStatus::PENDING)
+                ->where('attempts', '<', 5)
+                ->orderBy('created_at', 'asc')
+                ->limit($limit)
+                ->lock('FOR UPDATE SKIP LOCKED')
+                ->get();
+        });
     }
 }

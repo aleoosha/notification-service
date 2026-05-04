@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\NotificationChannel;
 use App\Enums\NotificationStatus;
 use Database\Factories\NotificationFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
