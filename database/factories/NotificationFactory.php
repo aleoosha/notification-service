@@ -15,6 +15,7 @@ class NotificationFactory extends Factory
     public function definition(): array
     {
         return [
+            'uuid' => fake()->uuid(),
             'idempotency_key' => Str::uuid()->toString(),
             'user_id' => User::factory(),
             'text' => $this->faker->sentence(10),

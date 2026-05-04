@@ -9,8 +9,10 @@ use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateNotificationRequest;
 use App\Http\Requests\GetNotificationHistoryRequest;
+use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NotificationController extends Controller
 {
@@ -27,38 +29,27 @@ class NotificationController extends Controller
         $notification = $this->createAction->execute($request->toDto());
 
         return $this->success(
-            data: $notification,
+            data: new NotificationResource($notification),
             message: 'Notification created and queued for processing',
             code: 201
         );
     }
 
     /**
-     * Получение статуса уведомления.
+     * Получение статуса конкретного уведомления по UUID.
      */
-    public function show(int $id): JsonResponse
+    public function show(Notification $notification): JsonResponse
     {
-        $notification = $this->repository->findById($id);
-
-        if (! $notification instanceof Notification) {
-            return $this->error('Notification not found', 404);
-        }
-
-        return $this->success([
-            'id' => $notification->id,
-            'status' => $notification->status,
-            'channel' => $notification->channel,
-            'updated_at' => $notification->updated_at,
-        ]);
+        return $this->success(new NotificationResource($notification));
     }
 
     /**
      * История уведомлений пользователя.
      */
-    public function index(GetNotificationHistoryRequest $request): JsonResponse
+    public function index(GetNotificationHistoryRequest $request): AnonymousResourceCollection
     {
         $history = $this->repository->getHistory($request->toDto());
 
-        return $this->success($history);
+        return NotificationResource::collection($history);
     }
 }
