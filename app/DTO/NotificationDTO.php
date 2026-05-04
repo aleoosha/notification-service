@@ -10,7 +10,7 @@ use App\Events\NotificationCreated;
 readonly class NotificationDTO
 {
     public function __construct(
-        public string $idempotencyKey,
+        public ?string $idempotencyKey,
         public int $userId,
         public string $text,
         public NotificationChannel $channel,
@@ -21,12 +21,10 @@ readonly class NotificationDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            idempotencyKey: (string) $data['idempotency_key'],
-            userId: (int) $data['user_id'],
-            text: (string) $data['text'],
-            channel: $data['channel'] instanceof NotificationChannel
-                ? $data['channel']
-                : NotificationChannel::from($data['channel']),
+            idempotencyKey: $data['idempotency_key'] ?? null,
+            userId: (int) ($data['user_id'] ?? 0),
+            text: (string) ($data['text'] ?? ''),
+            channel: NotificationChannel::from($data['channel']),
         );
     }
 }

@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\DTO\NotificationDTO;
-use App\Enums\NotificationChannel;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 
 class CreateNotificationRequest extends FormRequest
 {
@@ -20,24 +17,23 @@ class CreateNotificationRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Получить правила валидации, применяемые к запросу.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'idempotency_key' => $this->header('X-Idempotency-Key'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
-            'idempotency_key' => ['required', 'string', 'max:255'],
-            'user_id' => ['required', 'integer'],
             'text' => ['required', 'string', 'max:500'],
-            'channel' => ['required', new Enum(NotificationChannel::class)],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'channel' => ['required', 'string'],
+            'idempotency_key' => ['required', 'string'],
         ];
     }
 
-    /**
-     * Преобразовать валидированные данные в DTO.
-     */
     public function toDto(): NotificationDTO
     {
         return NotificationDTO::fromArray($this->validated());

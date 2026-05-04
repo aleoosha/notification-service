@@ -6,8 +6,8 @@ namespace App\Repositories;
 
 use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\DTO\NotificationFilterDTO;
-use App\Enums\NotificationStatus;
 use App\Models\Notification;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +29,13 @@ class EloquentNotificationRepository implements NotificationRepositoryInterface
         return $notification instanceof Notification ? $notification : null;
     }
 
+    public function findByUuid(string $uuid): ?Notification
+    {
+        $notification = Notification::where('uuid', $uuid)->first();
+
+        return $notification instanceof Notification ? $notification : null;
+    }
+
     /**
      * @return LengthAwarePaginator<Notification>
      */
@@ -45,20 +52,24 @@ class EloquentNotificationRepository implements NotificationRepositoryInterface
         return $result;
     }
 
-    /**
-     * @return Collection<int, Notification>
-     */
+    /** @return Collection<int, Model> */
     public function getPending(int $limit = 50): Collection
     {
         return DB::transaction(function () use ($limit) {
-            /** @var Collection<int, Notification> */
-            return Notification::query()
-                ->where('status', NotificationStatus::PENDING)
+            $query = Notification::query()
+                ->where('status', 'pending')
                 ->where('attempts', '<', 5)
                 ->orderBy('created_at', 'asc')
-                ->limit($limit)
-                ->lock('FOR UPDATE SKIP LOCKED')
-                ->get();
+                ->limit($limit);
+
+            if (config('database.default') !== 'sqlite') {
+                $query->lock('FOR UPDATE SKIP LOCKED');
+            }
+
+            /** @var Collection<int, Model> $records */
+            $records = $query->get()->toBase();
+
+            return $records;
         });
     }
 }

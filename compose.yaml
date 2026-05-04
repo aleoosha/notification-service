@@ -61,7 +61,7 @@ services:
             DB_DATABASE: '${DB_DATABASE:-notification_service}'
             DB_USERNAME: '${DB_USERNAME:-sail}'
             DB_PASSWORD: '${DB_PASSWORD:-password}'
-        command: php artisan notifications:process-outbox --limit=100
+        command: php artisan app:process-outbox --limit=100
         volumes:
             - '.:/var/www/html'
         networks:
@@ -73,7 +73,6 @@ services:
 
     worker:
         image: sail-8.3/app
-        user: '${WWWUSER:-1000}'
         environment:
             WWWUSER: '${WWWUSER:-1000}'
             LARAVEL_SAIL: 1

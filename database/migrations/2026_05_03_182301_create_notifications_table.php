@@ -13,11 +13,14 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
 
+            $table->uuid('uuid')->unique()->index();
+
             $table->string('idempotency_key')
                 ->unique()
                 ->comment('Уникальный ключ для предотвращения дублей сообщений');
 
             $table->unsignedBigInteger('user_id')
+                ->nullable()
                 ->index()
                 ->comment('ID пользователя-получателя');
 
@@ -43,6 +46,7 @@ return new class extends Migration
                 ->comment('Дата и время последней попытки обработки');
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

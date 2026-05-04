@@ -6,10 +6,11 @@ namespace App\Models;
 
 use App\Enums\NotificationChannel;
 use App\Enums\NotificationStatus;
+use App\Traits\HasUuid;
 use Database\Factories\NotificationFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
 class Notification extends Model
 {
     /** @use HasFactory<NotificationFactory> */
-    use HasFactory;
+    use HasFactory, HasUuid, SoftDeletes;
 
     /**
      * @var array<int, string>
