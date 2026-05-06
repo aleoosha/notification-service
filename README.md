@@ -42,7 +42,7 @@ docker compose exec app ./vendor/bin/pest
 ```
 **Статический анализ**
 ```bash
-docker compose exec app ./vendor/bin/phpstan analyse
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=2G
 ```
 **Форматирование кода**
 ```bash
