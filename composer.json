@@ -33,7 +33,7 @@
         }
     },
     "scripts": {
-        "lint": "phpstan analyse",
+        "lint": "phpstan analyse --memory-limit=2G",
         "format": "pint",
         "test": "pest",
         "post-autoload-dump": [

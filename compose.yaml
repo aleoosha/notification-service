@@ -1,99 +1,115 @@
 services:
-    laravel.test:
-        build:
-            context: ./vendor/laravel/sail/runtimes/8.3
-            dockerfile: Dockerfile
-            args:
-                WWWGROUP: '${WWWGROUP:-1000}'
-        image: sail-8.3/app
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-8080}:80'
-        environment:
-            WWWUSER: '${WWWUSER:-1000}'
-            LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
-            IGNITION_LOCAL_SITES_PATH: '${PWD}'
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            - pgsql
-            - redis
+  # 1. Сервис подготовки базы данных (выполняет миграции и сиды)
+  db-init:
+    build: .
+    user: root
+    environment:
+      - DB_HOST=pgsql
+      - DB_DATABASE=${DB_DATABASE:-notification_service}
+      - DB_USERNAME=${DB_USERNAME:-sail}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+    volumes:
+      - ".:/var/www/html"
+    command: php artisan migrate --force --seed --no-interaction
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    networks:
+      - app-network
 
-    pgsql:
-        image: 'postgres:15-alpine'
-        environment:
-            POSTGRES_DB: '${DB_DATABASE:-notification_service}'
-            POSTGRES_USER: '${DB_USERNAME:-sail}'
-            POSTGRES_PASSWORD: '${DB_PASSWORD:-password}'
-        volumes:
-            - 'sail-pgsql:/var/lib/postgresql/data'
-        networks:
-            - sail
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sail} -d ${DB_DATABASE:-notification_service}"]
-            interval: 5s
-            timeout: 5s
-            retries: 5
+  # 2. Основное API (Laravel)
+  app:
+    build: .
+    user: root
+    ports:
+      - "${APP_PORT:-8080}:8000"
+    environment:
+      - DB_HOST=pgsql
+      - DB_DATABASE=${DB_DATABASE:-notification_service}
+      - DB_USERNAME=${DB_USERNAME:-sail}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    volumes:
+      - ".:/var/www/html"
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    networks:
+      - app-network
 
-    redis:
-        image: 'redis:alpine'
-        networks:
-            - sail
-        healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
-            interval: 5s
-            timeout: 5s
-            retries: 5
+  # 3. Outbox Relay (мониторинг таблиц)
+  outbox-relay:
+    build: .
+    user: root
+    environment:
+      - DB_HOST=pgsql
+      - DB_DATABASE=${DB_DATABASE:-notification_service}
+      - DB_USERNAME=${DB_USERNAME:-sail}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+    volumes:
+      - ".:/var/www/html"
+    command: php artisan app:process-outbox --limit=100
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: always
+    networks:
+      - app-network
 
-    outbox-relay:
-        image: sail-8.3/app
-        environment:
-            WWWUSER: '${WWWUSER:-1000}'
-            LARAVEL_SAIL: 1
-            DB_CONNECTION: pgsql
-            DB_HOST: pgsql
-            DB_PORT: 5432
-            DB_DATABASE: '${DB_DATABASE:-notification_service}'
-            DB_USERNAME: '${DB_USERNAME:-sail}'
-            DB_PASSWORD: '${DB_PASSWORD:-password}'
-        command: php artisan app:process-outbox --limit=100
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            pgsql:
-                condition: service_healthy
-        restart: unless-stopped
+  # 4. Очередь (Worker)
+  worker:
+    build: .
+    user: root
+    environment:
+      - DB_HOST=pgsql
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+      - DB_DATABASE=${DB_DATABASE:-notification_service}
+      - DB_USERNAME=${DB_USERNAME:-sail}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+    volumes:
+      - ".:/var/www/html"
+    command: php artisan queue:work
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: always
+    networks:
+      - app-network
 
-    worker:
-        image: sail-8.3/app
-        environment:
-            WWWUSER: '${WWWUSER:-1000}'
-            LARAVEL_SAIL: 1
-            DB_CONNECTION: pgsql
-            DB_HOST: pgsql
-            REDIS_HOST: redis
-            QUEUE_CONNECTION: redis 
-        command: php artisan queue:work
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            - redis
-            - pgsql
-        restart: unless-stopped
+  # 5. База данных PostgreSQL
+  pgsql:
+    image: "postgres:15-alpine"
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-notification_service}"
+      POSTGRES_USER: "${DB_USERNAME:-sail}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-password}"
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sail} -d ${DB_DATABASE:-notification_service}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  # 6. Redis
+  redis:
+    image: "redis:alpine"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
 
 networks:
-    sail:
-        driver: bridge
+  app-network:
+    driver: bridge
 
 volumes:
-    sail-pgsql:
-        driver: local
+  db-data:
+    driver: local
