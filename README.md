@@ -49,6 +49,19 @@ docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=2G
 docker compose exec app ./vendor/bin/pint
 ```
 
+## Список API Эндпоинтов (Endpoints)
+
+### Уведомления
+- `POST /api/notifications` — Отправить уведомление (требует X-Idempotency-Key).
+- `GET /api/notifications/{uuid}` — Проверить статус доставки.
+- `GET /api/notifications` — История уведомлений пользователя.
+
+### Отчеты (Дополнительное задание)
+- `POST /api/reports/{user_uuid}` — Заказать генерацию отчета за период.
+- `GET /api/reports/{report_uuid}` — Проверить статус готовности отчета.
+- `GET /api/reports/{report_uuid}/download` — Скачать готовый CSV файл.
+
+
 ## Архитектурные решения
 
 ### 1. Transactional Outbox Pattern
